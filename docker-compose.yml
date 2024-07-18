@@ -1,0 +1,94 @@
+version: '3.8'
+services:
+  db:
+    container_name: pg_container
+    image: postgres:latest
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    volumes:
+      - C:/Users/xxxxx/Documents/WorkStack/databases/postgres:/var/lib/postgresql/data
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4:latest
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    volumes:
+      - C:/Users/xxxxx/Documents/WorkStack/databases/pgadmin:/var/lib/pgadmin
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    volumes:
+      - C:/Users/freyt/Documents/WorkStack/databases/mongodb:/var/lib/data/db
+      - C:/Users/freyt/Documents/WorkStack/databases/mongodb:/var/lib/data/configdb
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: "27017"
+    depends_on:
+      - mongodb
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+    - "3000:3000"
+    volumes:
+    - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    - grafana-data:/var/lib/grafana
+  nifi:
+    hostname: nifi
+    container_name: nifi_persistent
+    image: apache/nifi:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    volumes:
+      - ./nifi/database_repository:/opt/nifi/nifi-current/database_repository
+      - ./nifi/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
+      - ./nifi/content_repository:/opt/nifi/nifi-current/content_repository
+      - ./nifi/provenance_repository:/opt/nifi/nifi-current/provenance_repository
+      - ./nifi/state:/opt/nifi/nifi-current/state
+      - ./nifi/logs:/opt/nifi/nifi-current/logs
+  jupyter:
+    hostname: jupyter
+    container_name: jupyter_notebook
+    image: jupyter/datascience-notebook:latest
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      JUPYTER_TOKEN: "docker"
+    volumes:
+      - ./jupyter/workbooks:/home/jovyan/work
+      - ./jupyter/datasets:/home/jovyan/work/datasets
+      - ./jupyter/modules:/home/jovyan/work/modules
+      - ./jupyter/ssl:/etc/ssl/notebook
+
+volumes:
+  local_pgdata:
+  pgadmin-data:
+  mongo-data:
+  mongo-config:
+  grafana-data:
